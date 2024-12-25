@@ -84,6 +84,7 @@ struct ContentView: View {
                 .onAdClosed {
                     print("Ad Closed")
                 }
+                .frame(height: 50)
         }
     }
 }
