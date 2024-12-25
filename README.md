@@ -4,7 +4,6 @@
 
 ---
 
-
 ## Features
 
 - Pure SwiftUI support for AdMob integration.
@@ -12,6 +11,7 @@
 - Adaptive banner sizes and interstitial ads.
 - Simple initialization and configuration.
 - Easily extensible with callback support.
+- Option to choose between personalized and non-personalized ads.
 
 ---
 
@@ -35,11 +35,27 @@ To ensure proper ad attribution and privacy compliance, you need to configure yo
 Follow the detailed steps provided in Google's official guide:  
 [AdMob iOS Privacy Strategies](https://developers.google.com/ad-manager/mobile-ads-sdk/ios/quick-start#update_your_infoplist)  
 
-> **Important:**  Adding **SKAdNetworkIdentifiers** is **required** for accurate ad attribution and reporting on iOS devices.  
+> **Important:** Adding **SKAdNetworkIdentifiers** is **required** for accurate ad attribution and reporting on iOS devices.  
 
 
-### 2. Initialize AdMob
-Initialize AdMob when your app starts:
+### 2. Privacy and GDPR Setup
+
+#### For Personalized Ads
+1. Add the following key to your `Info.plist` file:
+
+```xml
+<key>NSUserTrackingUsageDescription</key>
+<string>This identifier will be used to deliver personalized ads to you.</string>
+```
+
+2. Configure AdMob UI:
+   - Add a GDPR message.
+   - Add an IDFA explainer.
+
+[Configure AdMob Privacy Messaging](https://apps.admob.com/v2/privacymessaging)
+
+
+3. Initialize AdMob with Personalized Ads
 
 ```swift
 import SwiftUIAdmobPro
@@ -47,7 +63,9 @@ import SwiftUIAdmobPro
 @main
 struct MyApp: App {
     init() {
-        AdMobInitializer.initialize()
+        Task {
+            try await AdMobInitializer.initialize(adPreference: .personalized)
+        }
     }
     
     var body: some Scene {
@@ -57,6 +75,34 @@ struct MyApp: App {
     }
 }
 ```
+
+> **Note:** Everything is handled automatically by `AdMobInitializer.initialize(adPreference: .personalized)` including UMP SDK and `ATTrackingManager` setup.
+
+#### For Non-Personalized Ads
+- No additional configuration is required.
+
+Example:
+
+```swift
+import SwiftUIAdmobPro
+
+@main
+struct MyApp: App {
+    init() {
+        Task {
+            try await AdMobInitializer.initialize(adPreference: .nonPersonalized)
+        }
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+---
 
 ### 3. Display a Banner Ad
 Add a banner ad to your SwiftUI view:
@@ -102,6 +148,7 @@ struct ContentView: View {
 
 
 ### 4. Show Interstitial Ads
+
 
 #### Step-by-Step Explanation
 To show interstitial ads, the `InterstitialAdManager` must be available in the SwiftUI environment. You achieve this by applying the `.interstitialAd` modifier to a **parent view**. This modifier sets up the `InterstitialAdManager`, which child views can access via the `@Environment`.
