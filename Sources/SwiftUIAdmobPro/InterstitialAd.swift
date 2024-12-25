@@ -9,7 +9,6 @@
 import SwiftUI
 import GoogleMobileAds
 
-
 // MARK: - Interstitial Ad Manager
 @MainActor
 public class InterstitialAdManager: NSObject, GADFullScreenContentDelegate, ObservableObject {
@@ -26,32 +25,45 @@ public class InterstitialAdManager: NSObject, GADFullScreenContentDelegate, Obse
     public var onAdFailedToPresent: ((Error) -> Void)?
     public var onAdDismissed: (() -> Void)?
     
+    // MARK: - Initialize with Ad Unit ID
     public init(adUnitID: String) {
         self.adUnitID = adUnitID
         super.init()
         loadAd()
     }
     
+    // MARK: - Load Ad
     public func loadAd() {
-        guard !isLoading else { return }
+        guard !isLoading else { return } // Prevent duplicate loading
         isLoading = true
-        GADInterstitialAd.load(withAdUnitID: adUnitID, request: GADRequest()) { [weak self] ad, error in
+        
+        GADInterstitialAd.load(withAdUnitID: adUnitID, request: ConsentManager.shared.createAdRequest()) { [weak self] ad, error in
+            
+            // Ensure state updates occur on the Main Actor
             Task { @MainActor in
-                guard let self = self else { return }
-                self.isLoading = false
+                guard let self = self else { return } // Handle weak reference safely
+                
+                self.isLoading = false // Reset loading flag
+                
                 if let error = error {
                     self.isAdReady = false
-                    self.onAdFailedToLoad?(error)
+                    self.onAdFailedToLoad?(error) // Trigger callback
+                    print("Failed to load interstitial ad: \(error.localizedDescription)")
                     return
                 }
+                
+                // Ad successfully loaded
                 self.interstitial = ad
-                self.interstitial?.fullScreenContentDelegate = self
+                self.interstitial?.fullScreenContentDelegate = self // Assign delegate
                 self.isAdReady = true
-                self.onAdLoaded?()
+                self.onAdLoaded?() // Trigger callback
+                print("Interstitial ad loaded successfully!")
             }
         }
     }
+
     
+    // MARK: - Show Ad
     public func showAd() {
         guard let rootViewController = UIWindowScene.keyWindow?.rootViewController else {
             print("No root view controller found to present ads.")

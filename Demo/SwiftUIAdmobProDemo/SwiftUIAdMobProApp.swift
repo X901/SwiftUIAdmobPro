@@ -13,7 +13,9 @@ import SwiftUIAdmobPro
 struct SwiftUIAdMobProApp: App {
     
     init() {
-        AdMobInitializer.initialize()
+        Task {
+            try await AdMobInitializer.initialize(adPreference: .nonPersonalized)
+        }
     }
     
     var body: some Scene {

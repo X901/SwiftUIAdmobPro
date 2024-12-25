@@ -8,12 +8,20 @@
 
 
 import GoogleMobileAds
+import Foundation
 
 public class AdMobInitializer {
-    public static func initialize(completion: ((GADInitializationStatus) -> Void)? = nil) {
-        GADMobileAds.sharedInstance().start { status in
-            print("AdMob SDK initialized with status: \(status.adapterStatusesByClassName)")
-            completion?(status)
+    @MainActor
+    public static func initialize(adPreference: ConsentManager.AdPreference) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            GADMobileAds.sharedInstance().start { status in
+                print("AdMob SDK initialized with status: \(status.adapterStatusesByClassName)")
+                
+                Task {
+                        await ConsentManager.shared.initialize(adPreference: adPreference)
+                        continuation.resume(returning: ())
+                }
+            }
         }
     }
 }

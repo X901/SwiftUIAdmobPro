@@ -85,7 +85,7 @@ public struct BannerView: UIViewControllerRepresentable {
             bannerView.adSize = GADAdSizeBanner
         }
         
-        bannerView.load(GADRequest())
+        bannerView.load(ConsentManager.shared.createAdRequest())
     }
 
     public func makeCoordinator() -> Coordinator {
